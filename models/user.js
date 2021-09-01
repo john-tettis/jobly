@@ -220,6 +220,7 @@ class User {
   }
   
   static async apply(username,jobId){
+    try{
     let result = await db.query(
       'INSERT INTO applications (username, job_id) VALUES ($1,$2) RETURNING job_id',[username,jobId]
     )
@@ -227,8 +228,12 @@ class User {
       return {applied:jobId}
     }
     else{
-      throw new NotFoundError("Invalid username or job id")
+      throw new Error()
     }
+  }
+  catch(err){
+    throw new NotFoundError(`Invalid username or job id`)
+  }
 
   }
 }

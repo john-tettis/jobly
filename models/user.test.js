@@ -7,6 +7,7 @@ const {
 } = require("../expressError");
 const db = require("../db.js");
 const User = require("./user.js");
+const Job = require("./job.js")
 const {
   commonBeforeAll,
   commonBeforeEach,
@@ -212,6 +213,43 @@ describe("update", function () {
   });
 });
 
+/************************************** apply */
+
+describe("apply", function () {
+  let id;
+  it("",async function () {
+    let job = await db.query("SELECT id from jobs WHERE title =$1",['test_job1'])
+    id = job.rows[0].id
+  })
+  test('works', async function () {
+    console.log({id})
+    await User.apply('u1',id)
+    let results = await db.query('SELECT username, job_id FROM applications WHERE username = $1',['u1'])
+    expect(results.rows[0]).toEqual({
+      username: 'u1',
+      job_id:id
+    })
+  })
+  test('doesnt find missing user', async function () {
+    try{
+      await User.apply('nope',id)
+    }
+    catch(err){
+      expect(err instanceof NotFoundError).toBeTruthy();
+      
+    }
+  })
+  test('doesnt find missing job', async function () {
+    try{
+      await User.apply('u1',100000)
+    }
+    catch(err){
+       expect(err instanceof NotFoundError).toBeTruthy();
+      
+    }
+  })
+})
+
 /************************************** remove */
 
 describe("remove", function () {
@@ -232,35 +270,5 @@ describe("remove", function () {
   });
 });
 
-/************************************** apply */
 
-describe("apply", async function () {
-  let id = await db.query('SELECT id FROM jobs WHERE title = test_job1')
-  test('works', async function () {
-    await User.apply('u1',id)
-    let results = await db.query('SELECT username, job_id FROM applications WHERE username = u1')
-    expect(results.rows[0]).toEqual({
-      username: 'u1',
-      job_id:id
-    })
-  })
-  test('doesnt find missing user', async function () {
-    try{
-      await User.apply('nope',id)
-    fail();
-    }
-    catch(err){
-      expect(err instanceof NotFoundError).toBeTruthy();
-    }
-  })
-  test('doesnt find missing job', async function () {
-    try{
-      await User.apply('u1',500)
-    fail();
-    }
-    catch(err){
-      expect(err instanceof NotFoundError).toBeTruthy();
-    }
-  })
-})
 

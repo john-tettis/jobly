@@ -5,6 +5,7 @@ const request = require("supertest");
 const db = require("../db.js");
 const app = require("../app");
 const User = require("../models/user");
+const Job = require("../models/job");
 
 const {
   commonBeforeAll,
@@ -29,7 +30,6 @@ describe("POST /users", function () {
           username: "u-new",
           firstName: "First-new",
           lastName: "Last-newL",
-          password: "password-new",
           email: "new@email.com",
           isAdmin: false,
         })
@@ -53,7 +53,6 @@ describe("POST /users", function () {
           username: "u-new",
           firstName: "First-new",
           lastName: "Last-newL",
-          password: "password-new",
           email: "new@email.com",
           isAdmin: true,
         })
@@ -295,23 +294,26 @@ describe("DELETE /users/:username", function () {
 
 
 /************************************** POST /users/:username/jobs/:title*/
-describe("POST /users/:username/jobs/:title", async function(){
-  let job = await db.query('SELECT id from jobs WHERE title= test_job1')
+describe("POST /users/:username/jobs/:title", function(){
+  let id;
+  it("",async function () {
+    let job = await db.query("SELECT id from jobs WHERE title =$1",['test_job1'])
+    id = job.rows[0].id
+  })
   test("Works for user", async function(){
     const resp = await request(app)
-        .post(`/users/u1/jobs/${job}`)
+        .post(`/users/u1/jobs/${id}`)
         .set("authorization", `Bearer ${u1Token}`);
       expect(resp.statusCode).toEqual(200);
-      expect(resp.body).toEqual({applied:job})
+      expect(resp.body).toEqual({applied:String(id)})
   })
-  test('not found for no such user', async function(){
+  test('error for no such user', async function(){
     const resp = await request(app)
-        .post(`/users/nope/jobs/${job}`)
+        .post(`/users/nope/jobs/${id}`)
         .set("authorization", `Bearer ${u1Token}`);
       expect(resp.statusCode).toEqual(404);
-      expect(resp.body).toEqual({applied:job})
   })
-  test('not found for no such job', async function(){
+  test('errorfor no such job', async function(){
     const resp = await request(app)
         .post(`/users/u1/jobs/nope`)
         .set("authorization", `Bearer ${u1Token}`);
@@ -319,8 +321,8 @@ describe("POST /users/:username/jobs/:title", async function(){
   })
   test('fails for anon', async function(){
     const resp = await request(app)
-        .post(`/users/u1/jobs/${job}`)
-      expect(resp.statusCode).toEqual(500);
+        .post(`/users/u1/jobs/${id}`)
+      expect(resp.statusCode).toEqual(401);
   })
   
 })
